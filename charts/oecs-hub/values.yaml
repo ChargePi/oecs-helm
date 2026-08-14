@@ -1,0 +1,233 @@
+## -- oecs-hub --
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  registry: ghcr.io
+  repository: chargepi/oecs-hub
+  tag: "" # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+replicaCount: 1
+
+configMountPath: /usr/oecs-hub/config
+
+# Extra args appended after the default `["--config", "<configMountPath>/config.yaml"]`.
+extraArgs: []
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: ["ALL"]
+
+resources: {}
+# resources:
+#   requests:
+#     cpu: 100m
+#     memory: 128Mi
+#   limits:
+#     memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Escape hatches for anything not modeled explicitly below.
+extraEnv: []
+extraEnvFrom: []
+extraVolumes: []
+extraVolumeMounts: []
+
+## -- Public gRPC / gRPC-Web API --
+grpc:
+  address: "0.0.0.0:50051"
+  allowedOrigins: []
+  service:
+    type: ClusterIP
+    port: 50051
+    annotations: {}
+
+## -- Admin gRPC API. The service has NO built-in authentication (see oecs-hub source) --
+## Never set adminGrpc.service.type to anything other than ClusterIP, and keep the
+## NetworkPolicy enabled unless the app gains its own auth layer.
+adminGrpc:
+  address: "0.0.0.0:50052"
+  service:
+    port: 50052
+    annotations: {}
+  networkPolicy:
+    enabled: true
+    # Additional NetworkPolicy `from` peers, beyond "same namespace", allowed to reach
+    # the admin service. E.g. a dedicated ops/admin namespace:
+    # extraIngressRules:
+    #   - namespaceSelector:
+    #       matchLabels:
+    #         kubernetes.io/metadata.name: oecs-admin
+    extraIngressRules: []
+
+ingress:
+  # Fronts the public grpc/grpc-web port ONLY. Never fronts adminGrpc.
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: registry.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: null
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+## -- Non-sensitive app config, rendered into a ConfigMap as config.yaml --
+config:
+  redis:
+    db: 0
+    cacheTtl: 1h
+  observability:
+    logging:
+      level: info
+    tracing:
+      enabled: false
+      address: ""
+    metrics:
+      enabled: false
+      address: ""
+      pushInterval: 5
+    profiling:
+      enabled: false
+      address: ""
+
+## -- Sensitive values. Each field supports either an inline `value` (chart creates/owns a
+## Secret key for it) or `existingSecret`/`existingSecretKey` to source it from a Secret you
+## manage yourself. Leave both empty to omit the corresponding env var entirely.
+## NOTE: existingSecretKey defaults are unique across this whole block on purpose - they all
+## land in the same chart-managed Secret (<fullname>-secrets) when using inline `value`s, so
+## reusing a key name (e.g. "password") across two fields would silently collide. Keep any
+## overrides unique too unless you intend to point two fields at the same existingSecret key. --
+secrets:
+  database:
+    dsn:
+      value: ""
+      existingSecret: ""
+      existingSecretKey: "dsn"
+  redis:
+    password:
+      value: ""
+      existingSecret: ""
+      existingSecretKey: "redis-password"
+  memgraph:
+    username:
+      value: ""
+      existingSecret: ""
+      existingSecretKey: "memgraph-username"
+    password:
+      value: ""
+      existingSecret: ""
+      existingSecretKey: "memgraph-password"
+  profiling:
+    username:
+      value: ""
+      existingSecret: ""
+      existingSecretKey: "profiling-username"
+    password:
+      value: ""
+      existingSecret: ""
+      existingSecretKey: "profiling-password"
+    authToken:
+      value: ""
+      existingSecret: ""
+      existingSecretKey: "profiling-authtoken"
+
+## -- PostgreSQL. When internal.enabled, a CloudNativePG `Cluster` is created and this chart
+## automatically points the app at the generated `<fullname>-postgresql-app` Secret's `uri` key,
+## ignoring secrets.database.dsn. When disabled, set secrets.database.dsn yourself. --
+postgresql:
+  internal:
+    enabled: true
+    instances: 2
+    storage:
+      size: 10Gi
+      storageClass: ""
+    imageName: "" # optional, uses the CNPG operator's default PostgreSQL image if empty
+
+## -- Memgraph (graph DB). Bundled as a real Helm subchart dependency (memgraph/memgraph).
+## When enabled, config.memgraph.address is auto-derived as bolt://<fullname>-memgraph:7687.
+## When disabled, set memgraph.address yourself (e.g. bolt://memgraph.example.com:7687) and
+## secrets.memgraph.username/password as needed. Remaining keys under this block (besides
+## `enabled`/`address`) are passed straight through to the memgraph subchart. --
+memgraph:
+  enabled: true
+  address: ""
+  service:
+    boltPort: 7687
+
+## -- Cache (Valkey, Redis-protocol-compatible). Bundled as a real Helm subchart dependency
+## (valkey/valkey). When enabled, config.redis.address is auto-derived as
+## <fullname>-valkey:6379. When disabled, set valkey.address yourself and
+## secrets.redis.password as needed. Remaining keys under this block (besides
+## `enabled`/`address`) are passed straight through to the valkey subchart. --
+valkey:
+  enabled: true
+  address: ""
+  auth:
+    enabled: false
+
+## -- DB migration Job (cmd/migrate), run as a pre-install/pre-upgrade Helm hook. --
+migration:
+  enabled: true
+  image: {} # defaults to the top-level `image` block if empty
+  command: ["/usr/local/bin/service"]
+  args: ["migrate", "up"]
+  resources: {}
+
+## -- Web frontend (React/nginx). Disabled by default: not yet wired to the real gRPC-Web API. --
+web:
+  enabled: false
+  replicaCount: 1
+  image:
+    registry: ghcr.io
+    repository: chargepi/oecs-hub-web
+    tag: ""
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  env:
+    # Defaults to http://<fullname>:<grpc.service.port> (grpc-web) if left empty.
+    backendUrl: ""
+    resolver: "kube-dns.kube-system.svc.cluster.local"
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: app.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+  resources: {}

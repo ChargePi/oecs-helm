@@ -1,0 +1,31 @@
+oecs-hub has been deployed.
+
+Public gRPC / gRPC-Web API:
+  {{ include "oecs-hub.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.grpc.service.port }}
+
+Admin gRPC API (cluster-internal only, no built-in auth):
+  {{ include "oecs-hub.fullname" . }}-admin.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.adminGrpc.service.port }}
+
+{{- if .Values.postgresql.internal.enabled }}
+PostgreSQL is bundled via a CloudNativePG Cluster. Make sure the CloudNativePG operator/CRDs
+are installed cluster-wide (see the chart README) or this Cluster resource will never
+reconcile.
+{{- end }}
+{{- if .Values.memgraph.enabled }}
+Memgraph is bundled as a subchart dependency.
+{{- end }}
+{{- if .Values.valkey.enabled }}
+Valkey (cache) is bundled as a subchart dependency.
+{{- end }}
+{{- if .Values.web.enabled }}
+
+Web frontend:
+  {{ include "oecs-hub.fullname" . }}-web.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.web.service.port }}
+{{- end }}
+
+{{- if not .Values.postgresql.internal.enabled }}
+
+NOTE: postgresql.internal.enabled is false - make sure secrets.database.dsn.value or
+secrets.database.dsn.existingSecret is set, otherwise the app and migration Job will fail to
+start.
+{{- end }}

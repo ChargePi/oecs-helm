@@ -1,0 +1,56 @@
+name: Helm Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  release-charts:
+    name: Publish ${{ matrix.chart }} to GHCR
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chart: [oecs-hub, oecs-scraper]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.4
+
+      - name: Determine chart version from the release tag
+        id: version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: helm dependency update
+        run: helm dependency update charts/${{ matrix.chart }}
+
+      - name: helm lint
+        run: helm lint charts/${{ matrix.chart }}
+
+      - name: helm template
+        run: helm template ci charts/${{ matrix.chart }} --kube-version 1.29.0
+
+      - name: Package chart
+        run: |
+          helm package charts/${{ matrix.chart }} \
+            --version "${{ steps.version.outputs.version }}" \
+            --app-version "${{ steps.version.outputs.version }}" \
+            --destination dist
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io \
+            --username "${{ github.actor }}" --password-stdin
+
+      - name: Push chart to GHCR
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          helm push "dist/${{ matrix.chart }}-${{ steps.version.outputs.version }}.tgz" \
+            "oci://ghcr.io/${owner}/charts"

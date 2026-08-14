@@ -1,0 +1,22 @@
+{{- if .Values.postgresql.internal.enabled }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ include "oecs-hub.fullname" . }}-postgresql
+  labels:
+    {{- include "oecs-hub.labels" . | nindent 4 }}
+spec:
+  instances: {{ .Values.postgresql.internal.instances }}
+  {{- with .Values.postgresql.internal.imageName }}
+  imageName: {{ . }}
+  {{- end }}
+  bootstrap:
+    initdb:
+      database: oecs_hub
+      owner: oecs_hub
+  storage:
+    size: {{ .Values.postgresql.internal.storage.size }}
+    {{- with .Values.postgresql.internal.storage.storageClass }}
+    storageClass: {{ . }}
+    {{- end }}
+{{- end }}

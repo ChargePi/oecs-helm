@@ -1,0 +1,53 @@
+name: Helm Lint & Template
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-template:
+    name: Lint & template (${{ matrix.chart }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chart: [oecs-hub, oecs-scraper]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.4
+
+      - name: helm dependency update
+        run: helm dependency update charts/${{ matrix.chart }}
+
+      - name: helm lint
+        run: helm lint charts/${{ matrix.chart }}
+
+      - name: helm template (default values, everything bundled)
+        run: helm template ci charts/${{ matrix.chart }} --kube-version 1.29.0
+
+      - name: helm template (external Postgres, dependencies disabled)
+        if: matrix.chart == 'oecs-hub'
+        run: |
+          helm template ci charts/oecs-hub --kube-version 1.29.0 \
+            --set postgresql.internal.enabled=false \
+            --set memgraph.enabled=false \
+            --set valkey.enabled=false \
+            --set secrets.database.dsn.existingSecret=external-db
+
+      - name: helm template (external Postgres/Kafka, dependencies disabled)
+        if: matrix.chart == 'oecs-scraper'
+        run: |
+          helm template ci charts/oecs-scraper --kube-version 1.29.0 \
+            --set postgresql.internal.enabled=false \
+            --set kafka.internal.enabled=false \
+            --set 'kafka.external.brokers={broker.example.com:9092}' \
+            --set secrets.database.dsn.existingSecret=external-db

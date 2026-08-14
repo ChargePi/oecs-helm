@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "oecs-hub.fullname" . }}-admin
+  labels:
+    {{- include "oecs-hub.labels" . | nindent 4 }}
+  {{- with .Values.adminGrpc.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  # Intentionally always ClusterIP: the admin gRPC API has no built-in authentication
+  # (see oecs-hub source) and must never be reachable from outside the cluster.
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.adminGrpc.service.port }}
+      targetPort: admin-grpc
+      protocol: TCP
+      name: admin-grpc
+  selector:
+    {{- include "oecs-hub.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,71 @@
+name: Helm k3d Smoke Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  k3d-deploy:
+    name: k3d smoke deploy (${{ matrix.chart }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chart: [oecs-hub, oecs-scraper]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.4
+
+      - name: Install k3d
+        run: curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
+      - name: Create k3d cluster
+        run: k3d cluster create oecs-ci --agents 1 --wait --timeout 120s
+
+      - name: Install CloudNativePG operator
+        run: |
+          helm repo add cnpg https://cloudnative-pg.github.io/charts
+          helm upgrade --install cnpg cnpg/cloudnative-pg \
+            -n cnpg-system --create-namespace --wait --timeout 5m
+
+      - name: Install Strimzi operator
+        if: matrix.chart == 'oecs-scraper'
+        run: |
+          helm repo add strimzi https://strimzi.io/charts/
+          helm upgrade --install strimzi strimzi/strimzi-kafka-operator \
+            -n kafka --create-namespace --wait --timeout 5m
+
+      - name: helm dependency update
+        run: helm dependency update charts/${{ matrix.chart }}
+
+      - name: Deploy chart (fake install)
+        run: |
+          helm upgrade --install ci-${{ matrix.chart }} charts/${{ matrix.chart }} \
+            --namespace ci-${{ matrix.chart }} --create-namespace \
+            --set migration.enabled=false \
+            --set image.registry=docker.io \
+            --set image.repository=busybox \
+            --set image.tag=1.36 \
+            --wait=false --timeout 5m
+
+      - name: Show created resources
+        if: always()
+        run: |
+          kubectl get all -n ci-${{ matrix.chart }}
+
+      - name: Uninstall
+        if: always()
+        run: helm uninstall ci-${{ matrix.chart }} -n ci-${{ matrix.chart }} --wait --timeout 2m || true
+
+      - name: Delete k3d cluster
+        if: always()
+        run: k3d cluster delete oecs-ci || true

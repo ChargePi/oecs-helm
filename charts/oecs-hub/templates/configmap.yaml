@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "oecs-hub.fullname" . }}
+  labels:
+    {{- include "oecs-hub.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    grpc:
+      address: {{ .Values.grpc.address | quote }}
+      allowedOrigins:
+        {{- toYaml .Values.grpc.allowedOrigins | nindent 8 }}
+    adminGrpc:
+      address: {{ .Values.adminGrpc.address | quote }}
+    redis:
+      address: {{ include "oecs-hub.redisAddress" . | quote }}
+      db: {{ .Values.config.redis.db }}
+      cacheTtl: {{ .Values.config.redis.cacheTtl | quote }}
+    memgraph:
+      address: {{ include "oecs-hub.memgraphAddress" . | quote }}
+    observability:
+      logging:
+        level: {{ .Values.config.observability.logging.level | quote }}
+      tracing:
+        enabled: {{ .Values.config.observability.tracing.enabled }}
+        address: {{ .Values.config.observability.tracing.address | quote }}
+      metrics:
+        enabled: {{ .Values.config.observability.metrics.enabled }}
+        address: {{ .Values.config.observability.metrics.address | quote }}
+        pushInterval: {{ .Values.config.observability.metrics.pushInterval }}
+      profiling:
+        enabled: {{ .Values.config.observability.profiling.enabled }}
+        address: {{ .Values.config.observability.profiling.address | quote }}

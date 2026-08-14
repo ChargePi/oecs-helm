@@ -1,0 +1,25 @@
+apiVersion: v2
+name: oecs-hub
+description: OECS hub - gRPC registry service for EV charger/manufacturer data
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.27.0-0"
+home: https://github.com/ChargePi/oecs-registry
+sources:
+  - https://github.com/ChargePi/oecs-registry
+keywords:
+  - oecs
+  - grpc
+  - registry
+maintainers:
+  - name: ChargePi
+dependencies:
+  - name: memgraph
+    version: "1.0.5"
+    repository: "https://memgraph.github.io/helm-charts"
+    condition: memgraph.enabled
+  - name: valkey
+    version: "0.11.0"
+    repository: "https://valkey.io/valkey-helm/"
+    condition: valkey.enabled

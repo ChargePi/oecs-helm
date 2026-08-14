@@ -1,0 +1,9 @@
+dependencies:
+- name: memgraph
+  repository: https://memgraph.github.io/helm-charts
+  version: 1.0.5
+- name: valkey
+  repository: https://valkey.io/valkey-helm/
+  version: 0.11.0
+digest: sha256:eac5913e453b2785ba0ff6161304ee9b22a50909e1aa7fdf29d2e2ea3a407a26
+generated: "2026-08-14T09:06:28.301030537+02:00"
