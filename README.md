@@ -4,7 +4,7 @@ Helm charts for the OECS platform services.
 
 | Chart      | Path                                 | Source repo                                                                       |
 |------------|---------------------------------------|-----------------------------------------------------------------------------------|
-| `oecs-hub` | [`charts/oecs-hub`](charts/oecs-hub) | [oecs-registry](https://github.com/ChargePi/oecs-registry) (Go module `oecs-hub`) |
+| `oecs-hub` | [`charts/oecs-hub`](charts/oecs-hub) | [oecs-hub](https://github.com/ChargePi/oecs-hub) |
 
 Each chart is independently installable and versioned. See each chart's own `README.md` for its full values reference.
 
