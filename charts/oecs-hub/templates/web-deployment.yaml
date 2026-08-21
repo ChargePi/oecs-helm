@@ -22,6 +22,10 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: web
           image: "{{ .Values.web.image.registry }}/{{ .Values.web.image.repository }}:{{ default .Chart.AppVersion .Values.web.image.tag }}"
