@@ -200,8 +200,8 @@ valkey:
 migration:
   enabled: true
   image: {} # defaults to the top-level `image` block if empty
-  command: ["/usr/local/bin/service"]
-  args: ["migrate", "up"]
+  command: ["/usr/local/bin/oecs-hub-migrate"]
+  args: []
   resources: {}
 
 ## -- Web frontend (React/nginx). Disabled by default: not yet wired to the real gRPC-Web API. --
