@@ -61,6 +61,14 @@ grpc:
     port: 50051
     annotations: {}
 
+## -- MCP (/mcp), served by the same process/port as grpc above - this Service
+## just gives it its own DNS name for consumers that only want the MCP surface.
+mcp:
+  service:
+    enabled: true
+    port: 50051
+    annotations: {}
+
 ## -- Admin gRPC API. The service has NO built-in authentication (see oecs-hub source) --
 ## Never set adminGrpc.service.type to anything other than ClusterIP, and keep the
 ## NetworkPolicy enabled unless the app gains its own auth layer.
@@ -161,6 +169,17 @@ secrets:
       value: ""
       existingSecret: ""
       existingSecretKey: "profiling-authtoken"
+  auth:
+    gatewaySecret:
+      value: ""
+      existingSecret: ""
+      existingSecretKey: "gateway-secret"
+
+## -- Auth edge: proves a request was routed through Traefik/Oathkeeper (see
+## secrets.auth.gatewaySecret above) and where to look up identity traits
+## Oathkeeper doesn't forward as headers. --
+kratos:
+  adminUrl: ""
 
 ## -- PostgreSQL. When internal.enabled, a CloudNativePG `Cluster` is created and this chart
 ## automatically points the app at the generated `<fullname>-postgresql-app` Secret's `uri` key,

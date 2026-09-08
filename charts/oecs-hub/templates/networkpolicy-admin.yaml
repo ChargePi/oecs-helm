@@ -12,6 +12,13 @@ spec:
   policyTypes:
     - Ingress
   ingress:
+    # Selecting this pod at all switches it to default-deny-all-ports, so the
+    # public grpc port needs its own unrestricted rule here too - otherwise
+    # this policy (meant to only lock down adminGrpc) blocks it entirely,
+    # including from Traefik.
+    - ports:
+        - port: {{ .Values.grpc.service.port }}
+          protocol: TCP
     - from:
         - namespaceSelector:
             matchLabels:

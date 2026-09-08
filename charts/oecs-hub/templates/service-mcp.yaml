@@ -1,0 +1,21 @@
+{{- if .Values.mcp.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "oecs-hub.fullname" . }}-mcp
+  labels:
+    {{- include "oecs-hub.labels" . | nindent 4 }}
+  {{- with .Values.mcp.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.mcp.service.port }}
+      targetPort: grpc
+      protocol: TCP
+      name: mcp
+  selector:
+    {{- include "oecs-hub.selectorLabels" . | nindent 4 }}
+{{- end }}

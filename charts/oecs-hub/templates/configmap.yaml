@@ -18,6 +18,8 @@ data:
       cacheTtl: {{ .Values.config.redis.cacheTtl | quote }}
     memgraph:
       address: {{ include "oecs-hub.memgraphAddress" . | quote }}
+    kratos:
+      adminUrl: {{ .Values.kratos.adminUrl | quote }}
     observability:
       logging:
         level: {{ .Values.config.observability.logging.level | quote }}
