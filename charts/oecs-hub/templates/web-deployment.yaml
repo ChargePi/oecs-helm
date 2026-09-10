@@ -47,6 +47,17 @@ spec:
               value: {{ .Values.web.env.backendUrl | default (printf "http://%s:%d" (include "oecs-hub.fullname" .) (int .Values.grpc.service.port)) | quote }}
             - name: RESOLVER
               value: {{ .Values.web.env.resolver | quote }}
+            {{- /* Left unset (not just empty) when not configured - the image ships its own
+            inert-but-non-empty default so nginx's request-time proxy_pass resolution doesn't
+            choke on an empty target; an explicit empty string here would be worse than unset. */}}
+            {{- with .Values.web.env.conversationApiUrl }}
+            - name: CONVERSATION_API_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.web.env.billingApiUrl }}
+            - name: BILLING_API_URL
+              value: {{ . | quote }}
+            {{- end }}
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
 {{- end }}
