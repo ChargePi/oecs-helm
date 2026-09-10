@@ -244,6 +244,9 @@ web:
     # gRPC-Web service is actually reachable.
     conversationApiUrl: ""
     billingApiUrl: ""
+    # Required for auth to work at all (see src/lib/auth/client.ts's BASE_PATH="/ory") -
+    # unlike the two above, this isn't optional.
+    kratosUrl: ""
   ingress:
     enabled: false
     className: ""
