@@ -43,10 +43,28 @@ spec:
               path: /healthz
               port: http
           env:
+            {{- /* A bare Service name (no namespace/domain suffix) doesn't resolve through
+            nginx's own `resolver` directive the way it would through the pod's normal libc
+            resolver (no search-domain suffixing) - must be the FQDN. */}}
             - name: BACKEND_URL
-              value: {{ .Values.web.env.backendUrl | default (printf "http://%s:%d" (include "oecs-hub.fullname" .) (int .Values.grpc.service.port)) | quote }}
+              value: {{ .Values.web.env.backendUrl | default (printf "http://%s.%s.svc.cluster.local:%d" (include "oecs-hub.fullname" .) .Release.Namespace (int .Values.grpc.service.port)) | quote }}
             - name: RESOLVER
               value: {{ .Values.web.env.resolver | quote }}
+            {{- /* Left unset (not just empty) when not configured - the image ships its own
+            inert-but-non-empty default so nginx's request-time proxy_pass resolution doesn't
+            choke on an empty target; an explicit empty string here would be worse than unset. */}}
+            {{- with .Values.web.env.conversationApiUrl }}
+            - name: CONVERSATION_API_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.web.env.billingApiUrl }}
+            - name: BILLING_API_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.web.env.kratosUrl }}
+            - name: KRATOS_URL
+              value: {{ . | quote }}
+            {{- end }}
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
 {{- end }}

@@ -239,6 +239,14 @@ web:
     # Defaults to http://<fullname>:<grpc.service.port> (grpc-web) if left empty.
     backendUrl: ""
     resolver: "kube-dns.kube-system.svc.cluster.local"
+    # Optional features (chat, billing) - left unset by default, matching the
+    # image's own inert fallback. Only set these once the corresponding
+    # gRPC-Web service is actually reachable.
+    conversationApiUrl: ""
+    billingApiUrl: ""
+    # Required for auth to work at all (see src/lib/auth/client.ts's BASE_PATH="/ory") -
+    # unlike the two above, this isn't optional.
+    kratosUrl: ""
   ingress:
     enabled: false
     className: ""
