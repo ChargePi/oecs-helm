@@ -9,6 +9,15 @@ spec:
   podSelector:
     matchLabels:
       {{- include "oecs-hub.selectorLabels" . | nindent 6 }}
+    # Excludes the web frontend - it shares this release's instance/name labels
+    # but isn't a gRPC backend, so it has no business being governed by a
+    # policy scoped to the gRPC ports below (selecting it here would switch it
+    # to default-deny-all-ports and silently block its own port 8080).
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: NotIn
+        values:
+          - web
   policyTypes:
     - Ingress
   ingress:
