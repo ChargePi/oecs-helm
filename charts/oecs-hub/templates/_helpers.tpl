@@ -114,6 +114,7 @@ Remaining sensitive env vars (redis/memgraph/profiling), always sourced per the 
 {{ include "oecs-hub.secretEnv" (dict "envName" "OECS_HUB_OBSERVABILITY_PROFILING_PASSWORD" "spec" .Values.secrets.profiling.password "defaultSecretName" (include "oecs-hub.secretName" .)) }}
 {{ include "oecs-hub.secretEnv" (dict "envName" "OECS_HUB_OBSERVABILITY_PROFILING_AUTHTOKEN" "spec" .Values.secrets.profiling.authToken "defaultSecretName" (include "oecs-hub.secretName" .)) }}
 {{ include "oecs-hub.secretEnv" (dict "envName" "OECS_HUB_AUTH_GATEWAY_SECRET" "spec" .Values.secrets.auth.gatewaySecret "defaultSecretName" (include "oecs-hub.secretName" .)) }}
+{{ include "oecs-hub.secretEnv" (dict "envName" "OECS_HUB_BIFROST_APIKEY" "spec" .Values.secrets.bifrost.apiKey "defaultSecretName" (include "oecs-hub.secretName" .)) }}
 {{- end -}}
 
 {{/*

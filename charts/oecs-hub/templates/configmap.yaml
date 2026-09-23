@@ -20,6 +20,13 @@ data:
       address: {{ include "oecs-hub.memgraphAddress" . | quote }}
     kratos:
       adminUrl: {{ .Values.kratos.adminUrl | quote }}
+    bifrost:
+      baseUrl: {{ .Values.bifrost.baseUrl | quote }}
+      model: {{ .Values.bifrost.model | quote }}
+    promptSuggestions:
+      refreshInterval: {{ .Values.config.promptSuggestions.refreshInterval | quote }}
+      poolSize: {{ .Values.config.promptSuggestions.poolSize }}
+      returnCount: {{ .Values.config.promptSuggestions.returnCount }}
     observability:
       logging:
         level: {{ .Values.config.observability.logging.level | quote }}
