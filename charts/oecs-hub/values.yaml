@@ -128,6 +128,14 @@ config:
     profiling:
       enabled: false
       address: ""
+  # Chat empty state's suggested-prompt chips (internal/promptsuggestion).
+  promptSuggestions:
+    # How long a topic's cached pool stays fresh before the next request regenerates it.
+    refreshInterval: 30m
+    # How many distinct suggestions are generated and cached per topic on each regeneration.
+    poolSize: 10
+    # How many of a topic's cached pool are randomly sampled and returned per request.
+    returnCount: 1
 
 ## -- Sensitive values. Each field supports either an inline `value` (chart creates/owns a
 ## Secret key for it) or `existingSecret`/`existingSecretKey` to source it from a Secret you
@@ -174,12 +182,26 @@ secrets:
       value: ""
       existingSecret: ""
       existingSecretKey: "gateway-secret"
+  bifrost:
+    # Bifrost virtual key (sk-bf-...), sent as the Bearer token. Leave empty if Bifrost
+    # governance is disabled.
+    apiKey:
+      value: ""
+      existingSecret: ""
+      existingSecretKey: "bifrost-api-key"
 
 ## -- Auth edge: proves a request was routed through Traefik/Oathkeeper (see
 ## secrets.auth.gatewaySecret above) and where to look up identity traits
 ## Oathkeeper doesn't forward as headers. --
 kratos:
   adminUrl: ""
+
+## -- Bifrost (OpenAI-API-compatible LLM gateway), used for prompt suggestions. Not bundled -
+## point baseUrl at an existing instance. API key lives under secrets.bifrost.apiKey. --
+bifrost:
+  baseUrl: "http://bifrost:8080/v1"
+  # Bifrost's "provider/model" form.
+  model: "gemini/gemini-3.1-flash-lite"
 
 ## -- PostgreSQL. When internal.enabled, a CloudNativePG `Cluster` is created and this chart
 ## automatically points the app at the generated `<fullname>-postgresql-app` Secret's `uri` key,
