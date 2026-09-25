@@ -65,6 +65,15 @@ spec:
             - name: KRATOS_URL
               value: {{ . | quote }}
             {{- end }}
+            {{- /* Chatwoot support widget, served to the SPA via /env.js - hidden unless both set. */}}
+            {{- with .Values.web.env.chatwootBaseUrl }}
+            - name: CHATWOOT_BASE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.web.env.chatwootWebsiteToken }}
+            - name: CHATWOOT_WEBSITE_TOKEN
+              value: {{ . | quote }}
+            {{- end }}
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
 {{- end }}
