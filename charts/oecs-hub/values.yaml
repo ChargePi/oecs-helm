@@ -269,6 +269,9 @@ web:
     # Required for auth to work at all (see src/lib/auth/client.ts's BASE_PATH="/ory") -
     # unlike the two above, this isn't optional.
     kratosUrl: ""
+    # Chatwoot support widget (base URL + website inbox token); widget is hidden unless both are set.
+    chatwootBaseUrl: ""
+    chatwootWebsiteToken: ""
   ingress:
     enabled: false
     className: ""
