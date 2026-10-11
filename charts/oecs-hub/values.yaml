@@ -196,12 +196,31 @@ secrets:
 kratos:
   adminUrl: ""
 
-## -- Bifrost (OpenAI-API-compatible LLM gateway), used for prompt suggestions. Not bundled -
-## point baseUrl at an existing instance. API key lives under secrets.bifrost.apiKey. --
+## -- Bifrost (OpenAI-API-compatible LLM gateway), used for prompt suggestions and semantic
+## search embeddings. Not bundled - point baseUrl at an existing instance. API key lives under
+## secrets.bifrost.apiKey. --
 bifrost:
   baseUrl: "http://bifrost:8080/v1"
   # Bifrost's "provider/model" form.
   model: "gemini/gemini-3.1-flash-lite"
+
+## -- Semantic charger/manufacturer search, ranked by a Qdrant index embedded through Bifrost.
+## Qdrant is not bundled - point qdrant.host at an existing instance. Disabled, search matches
+## names only. --
+semanticSearch:
+  enabled: false
+  qdrant:
+    host: "qdrant"
+    # gRPC port.
+    port: 6334
+  collection: "oecs_chargers"
+  manufacturerCollection: "oecs_manufacturers"
+  # Bifrost's "provider/model" form. Changing it requires new collections and a reindex.
+  embeddingModel: "openai/text-embedding-3-small"
+  topK: 100
+  # Cosine similarity cutoffs; model-specific, re-tune when embeddingModel changes.
+  minScore: 0.25
+  manufacturerMinScore: 0.25
 
 ## -- PostgreSQL. When internal.enabled, a CloudNativePG `Cluster` is created and this chart
 ## automatically points the app at the generated `<fullname>-postgresql-app` Secret's `uri` key,
