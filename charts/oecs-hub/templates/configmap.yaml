@@ -27,6 +27,16 @@ data:
       refreshInterval: {{ .Values.config.promptSuggestions.refreshInterval | quote }}
       poolSize: {{ .Values.config.promptSuggestions.poolSize }}
       returnCount: {{ .Values.config.promptSuggestions.returnCount }}
+    semanticSearch:
+      enabled: {{ .Values.semanticSearch.enabled }}
+      qdrantHost: {{ .Values.semanticSearch.qdrant.host | quote }}
+      qdrantPort: {{ .Values.semanticSearch.qdrant.port }}
+      collection: {{ .Values.semanticSearch.collection | quote }}
+      manufacturerCollection: {{ .Values.semanticSearch.manufacturerCollection | quote }}
+      embeddingModel: {{ .Values.semanticSearch.embeddingModel | quote }}
+      topK: {{ .Values.semanticSearch.topK }}
+      minScore: {{ .Values.semanticSearch.minScore }}
+      manufacturerMinScore: {{ .Values.semanticSearch.manufacturerMinScore }}
     observability:
       logging:
         level: {{ .Values.config.observability.logging.level | quote }}
